@@ -4,10 +4,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://unpkg.com/vue@next"></script>
+    <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"
@@ -32,64 +32,87 @@
     </style>
 </head>
 <body>
-<div id="app">
-
-<form id="create_tweet" >
-  <div class="form-group">
-    <label for="name_field">User Name</label>
-    <input type="text" class="form-control" id="name_field", name="user_name" placeholder="Enter Name">
-  </div>
-  <div class="form-group">
-    <label for="message">Password</label>
-    <input type="text" class="form-control" id="message" name="message" placeholder="Tweet">
-  </div>
-  <button type="submit" class="btn btn-primary">Submit</button>
-</form>
-<div id="vue-table">
-    <p>{{ message }}</p>
-  <table >
-        <thead>
-        <th>
-            title
-        </th>
-        </thead>
-        <tbody>
-            {{ message }}
-        </tbody>
-
+  <div id="app" class="mx-4">
+    <h2 class="my-4">Poor Man Twitter</h2>
+    <h4>Post your tweet</h4>  
+    <form @submit.prevent="createTweet">
+      <div class="form-group">
+        <label for="user_name">User Name</label>
+        <input type="text" class="form-control" v-model="form.user_name" name="user_name" placeholder="Enter Name">
+        <span class="text-danger">## error?.user_name ? error?.user_name[0] : null ##</span>
+      </div>
+      <div class="form-group">
+        <label for="message">Message</label>
+        <input type="text" class="form-control" v-model="form.message" name="message" placeholder="Tweet">
+        <span class="text-danger">## error?.message ? error?.message[0] : null ##</span>
+      </div>
+      <input type="submit" class="btn btn-primary" />
+    </form>
+    <h4 class="my-4">Tweets</h4>
+    <table class="table" id="tweet-table">
+      <thead>
+        <tr>
+          <th>
+            User Name
+          </th>
+          <th>
+            Message
+          </th>
+          <th>
+            Created At
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="tweet in tweets" :key="tweet.id">
+          <td>## tweet.user_name ##</td>
+          <td>## tweet.message ##</td>
+          <td>## tweet.created_at ##</td>
+        </tr>
+      </tbody>
     </table>
-</div>
-
-</div>
-
- <script>
-    var app = new Vue({
-      el: '#vue-table',
-      data: {
-        message: 'Vue.js second example with CDN'
-      }
-    });
-  </script>
-<script>
-  $("form").submit(function(e){
-    console.log("hello");
-    e.preventDefault();
-    jQuery.support.cors = true;
-    var formData = new FormData(document.getElementById('create_tweet'));
-      $.ajax({
-        type: "POST",
-        url: "{% url 'create-tweet' %}",
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function(response){
-        console.log(response);
+  </div>
+  
+  <script>
+    const app = Vue.createApp({
+      delimiters: ['##', '##'],
+      data() {
+        return {
+          tweets: [{user_name: "test", message: "test1"}],
+          form: { user_name: '', message: '' },
+          error: null
         }
-      });
+      },
+      created() {
+        this.getTweets();
+      },
+      methods: {
+          async createTweet () {
+            try {
+            await axios.post("{% url 'create-tweet' %}", this.form );
+            this.getTweets();
+            this.resetForm();
+            } catch (err) {
+              console.log(err);
+              this.error = err.response.data;
+            }
+          },
 
-    $('#create_tweet').trigger("reset");
-  });
-</script>
+          resetForm () {
+            this.form = { user_name: '', message: ''};
+            this.error = null;
+          },
+
+          async getTweets () {
+            const response = await axios.get("{% url 'create-tweet' %}");
+            this.tweets = response.data;
+          }
+        }
+
+    });
+
+    app.mount("#app");
+  </script>
 
 </body>
 
