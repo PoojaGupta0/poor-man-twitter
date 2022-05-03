@@ -11,7 +11,7 @@ ___
 ## Installation
 1. _Clone the repo_ 
     ```
-    repo url
+    https://github.com/PoojaGupta0/poor-man-twitter.git
     ```
 2. _install vue.js_ \
    Here vue js is used by the cdn link so just add script in template
